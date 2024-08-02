@@ -5,18 +5,18 @@ services:
       - 3030:3030
       - 5555:5555
     volumes:
-      - bot_sessions:/app/bot_sessions:rw
+      - ./bot_sessions:/app/bot_sessions:rw
     env_file: .env
     cap_add: 
       - SYS_ADMIN
     restart: always
     networks:
-      - chatwoot_default
+      - chat_default
     command: ["pm2-runtime", "start", "./src/app.js", "--cron", "0 */12 * * *"]
 
 volumes:
   bot_sessions:
 
 networks:
-  chatwoot_default:
+  chat_default:
     external: true

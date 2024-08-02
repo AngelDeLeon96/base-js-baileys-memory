@@ -1,0 +1,22 @@
+{
+	"reiniciar_bot": "💭Si desea volverse a comunicar, escriba: hola, para volver a hablar con el bot.",
+	"desea_comunicarse": "Desea comunicarse con un agente?",
+	"connected": "📥Estas conectado con un agente, por un periodo de tiempo determinado❗️",
+	"solicitar_nombre": "👤Cuál es su nombre❓",
+	"solicitar_consulta": "Cuál es su consulta❓",
+	"bienvenida": "👋¡Hola! Bienvenido al Bot de la Fiscalia General Electoral.",
+	"solicitar_datos": "🗓️Por favor, proporciónenos los siguientes datos:",
+	"gracias": "🔵Gracias por contactarnos.",
+	"opciones": "Escriba 1 para ✅sí o 2 para ⭕️no.",
+	"finished": "⏰Comunicación terminada con el usuario.",
+	"bot_deactivated": "Bot desactivado🛑, el usuario puede hablar libremente.",
+	"agente_comunicara": "💬Un agente se estará comunicando con usted a este número:",
+	"llenar_form": "❗️Por favor, rellene el siguiente formulario:",
+	"error_generico": "❌Se produjo un error, intente nuevamente!",
+	"inactividad": "Hemos procedido con la cancelación debido a inactividad.",
+	"bot_reactivated": "🤖Bot reactivado.",
+	"no_permitida": "🚩Acción no permitida. Por favor, llenar los datos solicitados.",
+	"no_permitida_voz": "🔇No se permite el envío de notas de voz.",
+	"solicitud_agente": "Si el agente no lo solicita.",
+	"fuera_laboral": "El horario laboral es: 8:00am a 4:00pm"
+}

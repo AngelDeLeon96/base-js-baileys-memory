@@ -3,7 +3,7 @@
     <picture>
       <img src="https://builderbot.vercel.app/assets/thumbnail-vector.png" height="80">
     </picture>
-    <h2 align="center">BotPlus</h2>
+    <h2 align="center">BOT WB + Chatwoot</h2>
   </a>
 </p>
 
@@ -20,10 +20,11 @@
 
 
 ## Getting Started
-Bot creado utilizando BuilderBot, con el complemento de un CRM opensource como Chatwoot
+Bot desarrollado utilizando el framework builderbot y conectado a un CRM opensource [Chatwoot](https://www.chatwoot.com/)
+
 
 ```
-npm create builderbot@latest
+npm i
 ```
 
 
@@ -31,5 +32,6 @@ npm create builderbot@latest
 
 Visit [builderbot](https://builderbot.vercel.app/) to view the full documentation.
 
-## Contact Us
+
+## Developers
 - Angel De Leon

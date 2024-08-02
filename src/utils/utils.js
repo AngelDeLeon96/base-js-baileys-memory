@@ -1,4 +1,6 @@
-import { addKeyword } from '@builderbot/bot'
+import { addKeyword } from '@builderbot/bot';
+import fs from 'fs'
+
 const ADMIN_NUMBER = process.env.ADMIN_NUMBER
 
 const catch_error = (error) => {
@@ -40,5 +42,39 @@ const blackListFlow = addKeyword('mute')
         }
     })
 
+const verificarOCrearCarpeta = (ruta) => {
+    return new Promise((resolve, reject) => {
+        fs.access(ruta, fs.constants.F_OK, (err) => {
+            if (err) {
+                // La carpeta no existe, crearla
+                fs.mkdir(ruta, { recursive: true }, (err) => {
+                    if (err) {
+                        reject('Error al crear la carpeta: ' + err);
+                    } else {
+                        resolve('Carpeta creada correctamente.');
+                    }
+                });
+            } else {
+                // La carpeta existe
+                resolve('La carpeta ya existe.');
+            }
+        });
+    });
+}
+const esHorarioLaboral = (fecha) => {
+    const hora_inicio = process.env.H_INICIO ?? 8;
+    const hora_salida = process.env.H_SALIDA ?? 16;
 
-export { catch_error, numberClean, blackListFlow };
+    const inicio_semana = process.env.S_LABORAL_INICIO ?? 1
+    const final_semana = process.env.S_LABORAL_FINAL ?? 5
+
+    const diaActual = fecha.getDay();
+    const horaActual = fecha.getHours();
+    const esDiaLaboral = diaActual >= inicio_semana && diaActual <= final_semana
+    const esHoraLaboral = horaActual >= hora_inicio && horaActual <= hora_salida
+    console.log(esDiaLaboral, esHoraLaboral)
+    console.log(hora_inicio, hora_salida, horaActual)
+    return esHoraLaboral && esDiaLaboral ? true : false
+}
+
+export { catch_error, numberClean, blackListFlow, verificarOCrearCarpeta, esHorarioLaboral };
