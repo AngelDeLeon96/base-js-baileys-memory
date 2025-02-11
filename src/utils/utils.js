@@ -3,6 +3,7 @@ import fs from 'fs';
 import mime from 'mime-types';
 import { downloadMediaMessage } from '@whiskeysockets/baileys';
 import logger from './logger.js';
+import { isWeekend, getHours, getMinutes } from 'date-fns';
 
 const ADMIN_NUMBER = process.env.PHONE_NUMBER
 
@@ -30,6 +31,7 @@ const catch_error = (error) => {
 
 }
 
+//quita el prefijo de los numero de telefono
 const numberClean = (raw) => {
     //Mute +3400000 
     const number = raw.toLowerCase().replace('mute', '').replace(/\s/g, '').replace('+', '')
@@ -79,24 +81,21 @@ const esHorarioLaboral = (num) => {
     const fecha = new Date();
     const hora_inicio = Number(process.env.H_INICIO ?? 8);
     const hora_salida = Number(process.env.H_SALIDA ?? 16);
-    const inicio_semana = Number(process.env.S_LABORAL_INICIO ?? 1);
-    const final_semana = Number(process.env.S_LABORAL_FINAL ?? 5);
-    const diaActual = fecha.getDay();
-    const horaActual = fecha.getHours();
-    const minutosActual = fecha.getMinutes();
 
-    //console.log('Hora inicio:', hora_inicio, 'Hora salida:', hora_salida);
-    //console.log('Hora actual:', horaActual, 'Minutos:', minutosActual);
+    const horaActual = getHours(fecha);
+    const minutosActual = getMinutes(fecha);
 
     const tiempoActual = horaActual + minutosActual / 60;
 
-    const esDiaLaboral = diaActual >= inicio_semana && diaActual <= final_semana;
+    const esDiaLaboral = !isWeekend(fecha);
+
     const esHoraLaboral = (
         tiempoActual >= hora_inicio &&
         tiempoActual < hora_salida
     );
 
-    //console.log('Es hora laboral:', esHoraLaboral, 'Es día laboral:', esDiaLaboral);
+
+    console.log('Es hora laboral:', esHoraLaboral, 'Es día laboral:', esDiaLaboral);
 
     if (!esHoraLaboral || !esDiaLaboral) {
         logger.info('Se intentó acceder fuera de horario laboral', {
@@ -206,24 +205,6 @@ const extractMimeWb = (payload) => {
     return ext;
 };
 
-const findMimeType = (obj) => {
-    if (typeof obj !== 'object' || obj === null) {
-        return null;
-    }
-
-    if (obj.mimetype) {
-        return obj.mimetype;
-    }
-
-    for (let key in obj) {
-        const result = findMimeType(obj[key]);
-        if (result) {
-            return result;
-        }
-    }
-
-    return "bin";
-};
 
 const findMyData = (obj, keyToLook) => {
     // Si obj no es un objeto o es null, retornamos null
@@ -267,18 +248,41 @@ const findCaption = (obj) => {
 }
 
 const verifyMSG = (texto) => {
-    const regexSoloTexto = /^(?!_event)[\p{L}\p{N}\p{P}\p{Zs}]{5,}$/u;
-    return regexSoloTexto.test(texto);
+    //verifica si es un texto cualquiera
+    const regex = /_event_\w+__[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
+    return !regex.test(texto);
 }
+//verifica que el texto sea un numero para el input de los switches
+const verifyInput = (input) => {
+    const regex = /^\d$/
+    return regex.test(input)
+}
+
+const checkInputMenu = (text) => {
+    //debe ser "false", si es "true" significa que el usuario envio una imagen, doc, video, etc. No queremos eso...
+    const msg = verifyMSG(text)
+
+    //debe ser un valor numerico es decir "true"
+    const input = verifyInput(text)
+
+    if (msg && input)
+        return true
+    console.log(`msg: ${msg}, input digit: ${input}`)
+
+    return false
+}
+
 const formatName = (text) => {
     return text.split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }
+
 const break_flow = (content) => {
     const keywords = ['hasta luego', 'adios', 'resuelto'];
 
     let partial = content ? keywords.includes(content.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, "")) : false
     return partial;
 }
-export { catch_error, numberClean, blackListFlow, verificarOCrearCarpeta, esHorarioLaboral, getExtensionFromMime, getMimeWB, saveMediaWB, extractMimeWb, findMyData, break_flow, verifyMSG, formatName };
+
+export { catch_error, numberClean, blackListFlow, verificarOCrearCarpeta, esHorarioLaboral, getExtensionFromMime, getMimeWB, saveMediaWB, extractMimeWb, findMyData, break_flow, verifyMSG, formatName, verifyInput, checkInputMenu };
