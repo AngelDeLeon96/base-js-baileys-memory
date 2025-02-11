@@ -1,0 +1,24 @@
+BUSINESS_NAME=Nombre de la empresa
+CHATWOOT_URL=http://127.0.0.1
+CHATWOOT_ACCOUNT_ID=1
+CHATWOOT_INBOX_ID=1
+CHATWOOT_API=7bxxUZiDra5hMWgesorrdLki
+PORT_WB=5555
+PORT_BOT=3030
+PORT=3000
+DEBOUNCE_TIME=30000
+TIMER=600000
+TIMER_BOT=6000000
+WB_ADMIN_NUMBER=+50700000000
+# debe ser ssl
+BOT_URL=
+# debe ser igual al server, deberia ser un dominio
+FRONTEND_URL=
+FORM_URL=https://forms.office.com/
+H_INICIO = 7
+H_SALIDA = 21
+ALLOWED_DOCS=[pdf,doc,docx,xls,xlsx]
+ALLOWED_SIZE=5MB
+ALLOWED_IMAGES=[jpg,jpeg,png,gif]
+NODE_ENV=production
+

@@ -8,6 +8,6 @@ node_modules
 pnpm-lock.yaml
 *.log
 *qr.png
-public/*
-src/utils/logs/.3245fc698fb28f58c51da115b46fb7079f106c85-audit.json
-src/utils/logs/.cd135b66aab6e29fa70b618f531217bd788b0d06-audit.json
+
+src/utils/logs/*
+.vscode/tasks.json
