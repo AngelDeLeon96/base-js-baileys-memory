@@ -13,9 +13,9 @@
   "dependencies": {
     "@builderbot/bot": "1.2.2",
     "@builderbot/provider-baileys": "1.2.2",
-    "@whiskeysockets/baileys": "^6.7.9",
-    "axios": "^1.7.7",
-    "express": "^4.21.1",
+    "@whiskeysockets/baileys": "^6.7.12",
+    "date-fns": "^4.1.0",
+    "express": "^4.21.2",
     "i18n": "^0.15.1",
     "lru-cache": "^11.0.2",
     "mime-types": "^2.1.35",
@@ -26,7 +26,7 @@
   "devDependencies": {
     "eslint": "^8.57.1",
     "eslint-plugin-builderbot": "latest",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.9"
   },
   "author": "",
   "license": "ISC"
