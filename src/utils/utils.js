@@ -84,18 +84,12 @@ const esHorarioLaboral = (num) => {
 
     const horaActual = getHours(fecha);
     const minutosActual = getMinutes(fecha);
-
     const tiempoActual = horaActual + minutosActual / 60;
-
     const esDiaLaboral = !isWeekend(fecha);
-
     const esHoraLaboral = (
         tiempoActual >= hora_inicio &&
         tiempoActual < hora_salida
     );
-
-
-    console.log('Es hora laboral:', esHoraLaboral, 'Es día laboral:', esDiaLaboral);
 
     if (!esHoraLaboral || !esDiaLaboral) {
         logger.info('Se intentó acceder fuera de horario laboral', {
