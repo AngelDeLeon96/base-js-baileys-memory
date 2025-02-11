@@ -4,16 +4,21 @@ import { sendMessageChatwood } from '../services/chatwood.js';
 import { reset, start, stop } from '../utils/timer.js';
 import { showMSG } from '../i18n/i18n.js';
 import { freeFlow } from './agents.js';
-import { saveMediaWB, extractMimeWb } from '../utils/utils.js';
+import { saveMediaWB, extractMimeWb, checkInputMenu } from '../utils/utils.js';
 
 
 const prima_menu = addKeyword(EVENTS.ACTION)
     .addAction(async (ctx, { gotoFlow }) => start(ctx, gotoFlow))
-    .addAnswer([showMSG('menu'), showMSG('solicitar_consulta'), showMSG('prima_opcion_1'), showMSG('prima_opcion_2'), showMSG('prima_opcion_3'), showMSG('prima_opcion_4'), showMSG('prima_opcion_5'), `6. ${showMSG('exit')}`], { capture: true }, async (ctx, { state, gotoFlow }) => {
+    .addAnswer([showMSG('menu'), showMSG('solicitar_consulta'), showMSG('prima_opcion_1'), showMSG('prima_opcion_2'), showMSG('prima_opcion_3'), showMSG('prima_opcion_4'), showMSG('prima_opcion_5'), `6. ${showMSG('exit')}`], { capture: true }, async (ctx, { state, gotoFlow, fallBack }) => {
         reset(ctx, gotoFlow);
         await state.update({ 'prima_menu_opc': ctx.body });
+        const inputChecked = checkInputMenu(state.get("prima_menu_opc"))
+        //verificamos que los datos que envia el usuario numeros y no cualquier otra cosa
+        if (!inputChecked) {
+            return fallBack(`${showMSG('solicitar_consulta')}`);
+        }
     })
-    .addAction(async (ctx, { state, gotoFlow, endFlow, fallBack, globalState }) => {
+    .addAction({ delay: 200 }, async (ctx, { state, gotoFlow, endFlow, fallBack, globalState }) => {
         sendMessageChatwood(`${showMSG('selected')} ${state.get('prima_menu_opc')}`, 'incoming', globalState.get('conversation_id'));
         stop(ctx);
         switch (parseInt(state.get('prima_menu_opc'))) {
@@ -37,9 +42,9 @@ const prima_menu = addKeyword(EVENTS.ACTION)
 
 const primera_vez = addKeyword(EVENTS.ACTION)
     .addAnswer(`${showMSG('selected')} ${showMSG('prima_opcion_1')}`)
-    .addAnswer(`${showMSG('llenar_form')}`, { media: path.join(process.cwd(), 'public/files', 'FGE-solicitud y declaracion CO.pdf') })
+    .addAnswer(`${showMSG('llenar_form')}`, { media: path.join(process.cwd(), 'public/files', 'fest.png') })
     .addAnswer(`${showMSG('subir_pdf')} `)
-    .addAction({ delay: 700 }, async (_, { gotoFlow }) => {
+    .addAction({ delay: 200 }, async (_, { gotoFlow }) => {
         //return endFlow(`${showMSG('formulario_captado')}`)
         return gotoFlow(prima_menu)
     })
@@ -53,6 +58,7 @@ const attach_forms = addKeyword(EVENTS.ACTION)
         let cancelar = ctx.body;
         if (cancelar.toLowerCase() === "cancelar" || cancelar.toLowerCase() === "salir") {
             stop(ctx)
+            sendMessageChatwood("El usuario decidio salir.", 'incoming', globalState.get('conversation_id'));
             return gotoFlow(prima_menu);
         }
         let extractedMime = extractMimeWb(ctx)
@@ -65,7 +71,7 @@ const attach_forms = addKeyword(EVENTS.ACTION)
             return fallBack(`Solo se permiten los archivos en formato: ${formats}. ${showMSG('try_again')}`);
         }
     })
-    .addAction(async (ctx, { gotoFlow, flowDynamic }) => {
+    .addAction({ delay: 200 }, async (ctx, { gotoFlow, flowDynamic }) => {
         stop(ctx)
         await flowDynamic(showMSG('formulario_captado'))
         return gotoFlow(prima_menu)
