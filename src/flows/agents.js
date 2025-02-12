@@ -3,7 +3,10 @@ import { addKeyword, EVENTS } from '@builderbot/bot';
 import { reset, start, startBot, stop } from '../utils/timer.js';
 import { showMSG } from '../i18n/i18n.js';
 import logger from '../utils/logger.js';
+import EnvLoader from '../utils/config.ts';
 
+const env = EnvLoader.load();
+const TIMER_BOT = env.TIMER_BOT;
 
 //good bye
 const flowGoodBye = addKeyword(EVENTS.ACTION)
@@ -64,12 +67,12 @@ const flowTalkAgent = addKeyword(EVENTS.ACTION)
 //flujo libre
 const freeFlow = addKeyword(EVENTS.ACTION)
     .addAction(async (ctx, { gotoFlow, endFlow, blacklist }) => startBot(ctx, gotoFlow, endFlow, blacklist))
-    .addAnswer(`${showMSG('connected')} ${process.env.TIMER_BOT / 60000} minutos.`, async (ctx, { blacklist }) => {
+    .addAnswer(`${showMSG('connected')} ${TIMER_BOT / 60000} minutos.`, async (ctx, { blacklist }) => {
         let number = ctx.from.replace("+", "")
         let check_num = blacklist.checkIf(number)
         //console.log(number, check)
         if (!check_num) {
-            logger.info(`bot desactivado para: ${number} por ${(process.env.TIMER_BOT / 60000)}min.`)
+            logger.info(`bot desactivado para: ${number} por ${(TIMER_BOT / 60000)}min.`)
             blacklist.add(number)
             return
         }

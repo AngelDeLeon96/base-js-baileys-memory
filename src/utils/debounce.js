@@ -1,4 +1,6 @@
-const TIMERD = process.env.DEBOUNCE_TIME ?? 10000
+import EnvLoader from "./config.ts";
+const env = EnvLoader.load();
+const TIMERD = env.DEBOUNCE_TIME ?? 10000
 
 const debounce = (func, ms = TIMERD) => {
     let timeout = 0;

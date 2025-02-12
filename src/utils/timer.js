@@ -2,11 +2,15 @@ import { addKeyword, EVENTS } from '@builderbot/bot'
 import { showMSG } from '../i18n/i18n.js';
 import { flowMsgFinal } from '../flows/agents.js';
 import logger from './logger.js';
+import EnvLoader from './config.ts';
 // Objeto para almacenar los temporizadores para cada usuario
+const env = EnvLoader.load();
+
 const timers = {};
 const remainingTimes = {};
-const TIMER = process.env.TIMER ?? 100000
-const TIMER_BOT = process.env.TIMER_BOT ?? 100000
+const TIMER = env.TIMER ?? 100000
+const TIMER_BOT = env.TIMER_BOT ?? 100000
+
 console.log(`timer: ${TIMER / 60000} min, timer bot: ${TIMER_BOT / 60000}min`);
 
 //flujo final por inactividad

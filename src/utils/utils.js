@@ -4,8 +4,15 @@ import mime from 'mime-types';
 import { downloadMediaMessage } from '@whiskeysockets/baileys';
 import logger from './logger.js';
 import { isWeekend, getHours, getMinutes } from 'date-fns';
+import EnvLoader from './config.ts';
+const env = EnvLoader.load();
 
-const ADMIN_NUMBER = process.env.PHONE_NUMBER
+
+const ADMIN_NUMBER = env.WB_ADMIN_NUMBER;
+const H_INICIO = env.H_INICIO;
+const H_SALIDA = env.H_SALIDA;
+const ALLOWED_DOCS = env.ALLOWED_DOCS;
+const ALLOWED_IMAGES = env.ALLOWED_IMAGES;
 
 const catch_error = (error) => {
 
@@ -79,8 +86,8 @@ const verificarOCrearCarpeta = (ruta) => {
 
 const esHorarioLaboral = (num) => {
     const fecha = new Date();
-    const hora_inicio = Number(process.env.H_INICIO ?? 8);
-    const hora_salida = Number(process.env.H_SALIDA ?? 16);
+    const hora_inicio = Number(H_INICIO ?? 8);
+    const hora_salida = Number(H_SALIDA ?? 16);
 
     const horaActual = getHours(fecha);
     const minutosActual = getMinutes(fecha);
@@ -123,7 +130,6 @@ const saveMediaWB = async (payload) => {
 
     const fecha = new Date();
     //const mime_blocked = ['audio', 'video'];
-    const ext_blocked = process.env.EXT_BLOCKED;
     let attachment = [];
     let msg = "";
     let status_code = 200;
@@ -135,7 +141,7 @@ const saveMediaWB = async (payload) => {
         //const mimeType = mime.split("/")[0];
         //console.log('mensaje capturado con el provider: ', mime, "ext: ", ext, ext_blocked.includes(ext));
 
-        if (!ext_blocked.includes(ext)) {
+        if (ALLOWED_IMAGES.includes(ext) || ALLOWED_DOCS.includes(ext)) {
             try {
                 msg = findCaption(payload);
                 //console.log('caption', caption, msg)

@@ -1,9 +1,12 @@
 import express from 'express';
 import routes from '../routes/chatwood-hook.js';
+import EnvLoader from '../utils/config.ts';
+const env = EnvLoader.load();
+const PORT_BOT = env.PORT_BOT ?? 3030;
 
 class ServerHttp {
     app;
-    port = process.env.PORT_BOT ?? 3030;
+    port = PORT_BOT;
     providerWS;
 
     constructor(_providerWS, _bot) {

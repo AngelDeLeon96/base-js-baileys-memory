@@ -5,7 +5,9 @@ import { reset, start, stop } from '../utils/timer.js';
 import { showMSG } from '../i18n/i18n.js';
 import { freeFlow } from './agents.js';
 import { saveMediaWB, extractMimeWb, checkInputMenu } from '../utils/utils.js';
-
+import EnvLoader from '../utils/config.ts';
+const env = EnvLoader.load();
+const ALLOWED_DOCS = env.ALLOWED_DOCS;
 
 const prima_menu = addKeyword(EVENTS.ACTION)
     .addAction(async (ctx, { gotoFlow }) => start(ctx, gotoFlow))
@@ -62,13 +64,13 @@ const attach_forms = addKeyword(EVENTS.ACTION)
             return gotoFlow(prima_menu);
         }
         let extractedMime = extractMimeWb(ctx)
-        const formats = process.env.ALLOWED_DOCS
-        if (formats.includes(extractedMime)) {
+
+        if (ALLOWED_DOCS.includes(extractedMime)) {
             let [msg, attachment] = await saveMediaWB(ctx)
             sendMessageChatwood(msg, 'incoming', globalState.get('conversation_id'), attachment);
         }
         else {
-            return fallBack(`Solo se permiten los archivos en formato: ${formats}. ${showMSG('try_again')}`);
+            return fallBack(`Solo se permiten los archivos en formato: ${ALLOWED_DOCS}. ${showMSG('try_again')}`);
         }
     })
     .addAction({ delay: 200 }, async (ctx, { gotoFlow, flowDynamic }) => {
@@ -89,13 +91,13 @@ const attach_forms_cedula = addKeyword(EVENTS.ACTION)
             return gotoFlow(prima_menu);
         }
         let extractedMime = extractMimeWb(ctx);
-        const formats = process.env.ALLOWED_EXT_CEDULA;
-        if (formats.includes(extractedMime)) {
+
+        if (ALLOWED_DOCS.includes(extractedMime)) {
             let [msg, attachment] = await saveMediaWB(ctx)
             sendMessageChatwood(msg, 'incoming', globalState.get('conversation_id'), attachment);
         }
         else {
-            return fallBack(`${showMSG('no_permitida')} Solo se permiten los archivos en formato: ${formats}. ${showMSG('try_again')}`);
+            return fallBack(`${showMSG('no_permitida')} Solo se permiten los archivos en formato: ${ALLOWED_DOCS}. ${showMSG('try_again')}`);
         }
     })
     .addAction(async (ctx, { gotoFlow, flowDynamic }) => {
@@ -115,13 +117,12 @@ const attach_forms_continuidad = addKeyword('attach2')
             return gotoFlow(prima_menu);
         }
         let extractedMime = extractMimeWb(ctx);
-        let formats = process.env.ALLOWED_DOCS;
-        if (formats.includes(extractedMime)) {
+        if (ALLOWED_DOCS.includes(extractedMime)) {
             let [msg, attachment] = await saveMediaWB(ctx);
             await sendMessageChatwood(msg, 'incoming', globalState.get('conversation_id'), attachment);
         }
         else {
-            return fallBack(`${showMSG('no_permitida')} Solo se permiten los archivos en formato: ${formats}. ${showMSG('try_again')}`);
+            return fallBack(`${showMSG('no_permitida')} Solo se permiten los archivos en formato: ${ALLOWED_DOCS}. ${showMSG('try_again')}`);
         }
     })
     .addAction(async (ctx, { gotoFlow, flowDynamic }) => {
