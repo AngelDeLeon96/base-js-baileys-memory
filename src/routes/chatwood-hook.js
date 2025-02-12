@@ -1,10 +1,13 @@
 import express from 'express';
 import { catch_error, findMyData } from '../utils/utils.js';
-const router = express.Router();
-const TIMER_BOT = process.env.TIMER_BOT ?? 600000
 import { timers } from '../utils/timer.js';
 import logger from '../utils/logger.js';
 import { break_flow } from '../utils/utils.js';
+import EnvLoader from '../utils/config.ts';
+
+const env = EnvLoader.load();
+const router = express.Router();
+const TIMER_BOT = env.TIMER_BOT ?? 600000
 
 // Enviar mensaje a usuario de WhatsApp
 const chatWoodHook = async (req, res) => {
@@ -63,8 +66,9 @@ const chatWoodHook = async (req, res) => {
             }
             //envia los docs al whatsapp
             if (file) {
-                //console.log(file.data_url)
-                //const fileURL = file.data_url.replace('http://127.0.0.1:3000/', process.env.FRONTEND_URL)
+                console.log(file.data_url)
+                //const fileURL = file.data_url.replace('http://127.0.0.1:3000/', process.env.BOT_URL)
+
                 const fileURL = file.data_url
                 await providerWS.sendMedia(`${phone}@c.us`, fileURL, content)
                 //res.send('ok')
