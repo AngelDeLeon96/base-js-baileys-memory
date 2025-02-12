@@ -1,21 +1,21 @@
-import axios from 'axios';
 import { catch_error } from '../utils/utils.js';
 import { readFile } from 'fs/promises';
-
 import { releaseLock, acquireLock } from '../utils/in-memory-lock.js';
 import logger from '../utils/logger.js';
 import isUrlOnline from './isAlive.js';
+import EnvLoader from '../utils/config.ts';
+const env = EnvLoader.load();
 
-const SERVER = process.env.SERVER_DOCKER || "http://localhost";
-const ACCOUNT_ID = process.env.ACCOUNT_ID ?? 2;
-const INBOX_ID = process.env.INBOX_ID ?? 5;
-const API = process.env.API;
-const PORT = process.env.PORT;
+const SERVER = env.CHATWOOT_URL || "http://localhost";
+const ACCOUNT_ID = env.CHATWOOT_ACCOUNT_ID ?? 2;
+const INBOX_ID = env.CHATWOOT_INBOX_ID ?? 5;
+const API = env.CHATWOOT_API;
+
 
 //console.log('server: ', SERVER, PORT);
 // Map para trackear las creaciones en proceso
 const pendingSearches = new Map();
-
+const pendingRecovers = new Map()
 
 const checkServer = async () => {
     const online = await isUrlOnline(SERVER);
@@ -24,6 +24,12 @@ const checkServer = async () => {
         logger.error(`Error a conectarse al servidor ${SERVER}`, { "Status": status })
     }
 
+}
+const headersApi = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("api_access_token", API);
+    myHeaders.append("Content-Type", "application/json");
+    return myHeaders
 }
 
 checkServer();
@@ -34,29 +40,32 @@ const builderURL = (path) => {
 
 
 //create
-const createConversationChatwood = async (msg = "", type = "outgoing", contact_id = 0) => {
+const createConversationChatwood = async (contact_id = 0) => {
     try {
-
-        const myHeaders = new Headers();
+        const myHeaders = headersApi();
         const url = builderURL('conversations')
-        myHeaders.append("api_access_token", API);
-        myHeaders.append("Content-Type", "application/json");
-        const raw = JSON.stringify({
+        const bodyRaw = JSON.stringify({
             inbox_id: INBOX_ID,
             contact_id: contact_id,
         });
-
         const requestOptions = {
             method: "POST",
             headers: myHeaders,
-            body: raw,
+            body: bodyRaw,
         };
 
         const dataRaw = await fetch(url, requestOptions);
-        const data = await dataRaw.json();
-        return data.id;
+
+        if (dataRaw.status >= 200 || dataRaw.status < 300) {
+            const response = await dataRaw.json();
+            return response.id;
+        }
+        else {
+            return 0
+        }
+
     } catch (err) {
-        catch_error(err)
+        logger.error("Error al crear una conversacion", { err: err })
         //return null
     }
 }
@@ -68,6 +77,9 @@ const sendMessageChatwood = async (msg = "", message_type = "incoming", conversa
             return null; // O podrías devolver un objeto que indique que no se realizó la solicitud
         }
         const url = builderURL(`conversations/${conversation_id}/messages`);
+        const myHeaders = new Headers();
+        myHeaders.append("api_access_token", API);
+
         const form = new FormData();
         form.set("content", msg);
         form.set("message_type", message_type);
@@ -85,47 +97,29 @@ const sendMessageChatwood = async (msg = "", message_type = "incoming", conversa
             }
         }
 
-        const response = await fetch(url, {
+        const dataRaw = await fetch(url, {
             method: "POST",
-            headers: {
-                api_access_token: API
-            },
+            headers: myHeaders,
             body: form
         });
+        const response = await dataRaw.json();
+        if (dataRaw.status >= 200 || dataRaw.status < 300) {
 
-        if (!response.ok) {
-            const textResponse = await response.text();
-            logger.error('El servidor respondió con:', { status_code: response.status, status: response.statusText });
-            logger.error('Cuerpo de la respuesta:', { response: textResponse });
-            // new Error(`¡Error HTTP! estado: ${response.status}`);
+            return response;
         }
 
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            const textResponse = await response.text();
-            logger.error('Tipo de contenido inesperado:', { type: contentType });
-
-            logger.error('Cuerpo de la respuesta:', { response: textResponse });
-            //throw new Error(`Se esperaba JSON, pero se recibió ${contentType}`);
-        }
-
-        const data = await response.json();
-        // Guardar los datos en caché
-        return data;
 
     } catch (err) {
         logger.error('Error en sendMessageChatwood:', { error: err });
-        //throw err; // Re-lanza el error para que el llamador pueda manejarlo
+        throw err; // Re-lanza el error para que el llamador pueda manejarlo
     }
 };
 
 const createContact = async (phone = "") => {
     try {
-        const myHeaders = new Headers();
+        const myHeaders = headersApi();
         const url = builderURL('contacts');
         const contact_data = {}
-        myHeaders.append("api_access_token", API);
-        myHeaders.append("Content-Type", "application/json");
 
         const raw = JSON.stringify({
             inbox_id: INBOX_ID,
@@ -141,27 +135,27 @@ const createContact = async (phone = "") => {
 
         const dataRaw = await fetch(url, requestOptions);
         const response = await dataRaw.json();
-        contact_data.id = response.payload.contact.id;
-        contact_data.new = 1;
-        logger.info(`Se creó el contacto: ${phone} con id: ${contact_data.id} new: ${contact_data.new}`);
 
-        return contact_data;
+        if (dataRaw.status >= 200 && dataRaw.status < 300) {
+            contact_data.id = response.payload.contact.id;
+            contact_data.new = 1;
+            logger.info(`Se creó el contacto: ${phone} con id: ${contact_data.id} new: ${contact_data.new}`);
+            return contact_data
+        } else {
+            logger.error("Error al crear el contacto", { error: dataRaw })
+        }
+
     }
     catch (err) {
-        logger.error("Error al crear el contacto", { "err": err })
+        logger.error("Error al crear el contacto", { error: err })
 
     }
 }
 
 const updateContact = async (id = 0, nombre = "", cedula = "") => {
-
     try {
-        //const contact_data = null
-        const myHeaders = new Headers();
+        const myHeaders = headersApi();
         const url = builderURL(`contacts/${id}`);
-
-        myHeaders.append("api_access_token", API);
-        myHeaders.append("Content-Type", "application/json");
 
         const raw = JSON.stringify({
             inbox_id: INBOX_ID,
@@ -180,9 +174,15 @@ const updateContact = async (id = 0, nombre = "", cedula = "") => {
         const dataRaw = await fetch(url, requestOptions);
         const response = await dataRaw.json();
 
-        logger.info("Se actualizaron los datos del contacto", { "user": id, "nombre": nombre });
+        if (dataRaw.status >= 200 && dataRaw.status < 300) {
+            logger.info(`Se actualizó el contacto: ${nombre} con id: ${id} cedula: ${cedula}`);
+        }
 
-        return response.status;
+        if (dataRaw.status > 400) {
+            logger.error("Error al actualizar el contacto", { err: dataRaw.status })
+        }
+
+        return response.status
     }
     catch (err) {
         console.log(err)
@@ -194,7 +194,6 @@ const updateContact = async (id = 0, nombre = "", cedula = "") => {
 const searchUser = async (user = "") => {
     // Si ya hay una búsqueda en proceso para este usuario, retornar esa promesa
     if (pendingSearches.has(user)) {
-        logger.info(`Búsqueda en proceso para: ${user}`)
         return pendingSearches.get(user);
     }
 
@@ -202,40 +201,42 @@ const searchUser = async (user = "") => {
         try {
             const url = builderURL(`contacts/search?q=${user}`);
             let data_user = {};
-            const myHeaders = new Headers();
-            myHeaders.append("api_access_token", API);
-            myHeaders.append("Content-Type", "application/json");
-
+            const myHeaders = headersApi();
             const requestOptions = {
                 method: "GET",
                 headers: myHeaders,
             };
             const dataRaw = await fetch(url, requestOptions);
             const response = await dataRaw.json();
-            const { meta, payload } = response;
 
-            // Si encontramos el usuario
-            if (payload.length > 0) {
-                data_user.user_id = payload[0].id;  // Tomamos el primer resultado
-                data_user.new = 0;
-                data_user.nombre = payload[0].name;
-                data_user.cedula = payload[0].custom_attributes.cedula;
+            if (dataRaw.status >= 200 && dataRaw.status < 300) {
+                const { meta, payload } = response;
+
+                // Si encontramos el usuario
+                if (payload.length > 0) {
+                    data_user.user_id = payload[0].id;  // Tomamos el primer resultado
+                    data_user.new = 0;
+                    data_user.nombre = payload[0].name;
+                    data_user.cedula = payload[0].custom_attributes.cedula;
+                }
+                else {
+                    const res_contact = await createContact(user);
+                    data_user.user_id = res_contact.id;
+                    data_user.new = res_contact.new;
+                    data_user.nombre = user;
+                    data_user.cedula = "0000000000";
+                }
+
+                data_user.count = meta.count;
+                return data_user;
+
+            } else {
+                console.log("Error: ", response);
+
             }
-            else {
-                const res_contact = await createContact(user);
-                data_user.user_id = res_contact.id;
-                data_user.new = res_contact.new;
-                data_user.nombre = user;
-                data_user.cedula = "0000000000";
-            }
 
-            data_user.count = meta.count;
-
-            return data_user;
         } catch (err) {
-            //console.log(err)
             logger.error("Se produjo un error al buscar", { "error": err })
-            catch_error(err);
         } finally {
             // Limpiar el Map de búsquedas pendientes
             pendingSearches.delete(user);
@@ -248,51 +249,51 @@ const searchUser = async (user = "") => {
     return searchPromise;
 };
 
-const recoverConversation = async (id = 0) => {
-    try {
-        /*const cachedData = cache.get(id);
-        if (cachedData) {
-            //console.log('Usando datos en caché para conversation_id:', cachedData);
-            return cachedData;
-        }*/
+const recoverConversation = async (id = 0, user = "") => {
 
-        let conversation_id = 0
-        const url = builderURL(`contacts/${id}/conversations`)
-        const res = await axios.get(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                "api_access_token": API
-                // Añade otros encabezados si es necesario
-            }
-        });
-        const payload = res.data.payload
-        //console.log(payload)
+    if (pendingRecovers.has(id)) {
+        console.log("conversacion recuperada", pendingRecovers, "id", id, user)
+        return pendingRecovers.get(id)
+    }
 
-        for (let i = 0; i < payload.length; i++) {
-            const conversation = payload[i];
-            //console.log(conversation.id, conversation.status);
-            if (conversation.status == "open") {
-                conversation_id = conversation.id;
-                break;
+    const recoverPromise = (async () => {
+        try {
+            let conversation_id = 0
+            const url = builderURL(`contacts/${id}/conversations`)
+            const myHeaders = headersApi()
+            const requestOptions = {
+                method: "GET",
+                headers: myHeaders,
+            };
+            const dataRaw = await fetch(url, requestOptions)
+            const response = await dataRaw.json()
+            console.log(response.payload.length)
+            const payload = response.payload
+
+            if (payload.length > 0) {
+                if (payload[0].status === "open") {
+                    conversation_id = payload[0].id
+                }
             }
             else {
                 conversation_id = 0
-                //console.log('No se encontro una conversacion abierta.\n Se debe crear una nueva conversacion');
             }
+
+            return parseInt(conversation_id)
+        } catch (err) {
+            logger.error("Error al recuperar la conversacion", { err: err })
         }
+        finally {
+            pendingRecovers.delete(id)
+        }
+    })()
+    pendingRecovers.set(id, recoverPromise)
 
-        return conversation_id
-    } catch (err) {
-        catch_error(err)
-        console.log('err', err);
-    }
+    return recoverPromise
 };
-
-
 
 const recover = async (user = {}) => {
     try {
-        //const user_info = {};
         const data_user = await searchUser(user);
 
         if (data_user.user_id > 0) {
@@ -300,8 +301,9 @@ const recover = async (user = {}) => {
             try {
                 await acquireLock(lockKey);
                 const conversation_id = await recoverConversation(data_user.user_id, user)
-                if (conversation_id === 0) {
-                    const new_conv = await createConversationChatwood('', 'outgoing', data_user.user_id)
+                console.log("id: ", conversation_id)
+                if (conversation_id == 0) {
+                    const new_conv = await createConversationChatwood(data_user.user_id)
                     logger.info('Nueva conversación creada', { 'id': new_conv, 'user': user })
                     data_user.conversation_id = new_conv
                 } else {
@@ -314,7 +316,6 @@ const recover = async (user = {}) => {
             logger.warn('No se encontró el usuario:', { error: user })
             return null
         }
-
         return data_user
 
     } catch (err) {
