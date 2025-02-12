@@ -5,7 +5,7 @@
 	"solicitar_nombre": "Por favor, indíqueme su nombre completo.",
 	"solicitar_cedula": "Por favor, indíqueme su número de cédula.",
 	"solicitar_consulta": "Seleccione el motivo de su consulta escribiendo el número correspondiente:",
-	"bienvenida": "¡Hola! Bienvenido al chat de la Fiscalia General Electoral.",
+	"bienvenida": "¡Hola! Bienvenido al chat de",
 	"solicitar_datos": "Por favor, proporciónenos los siguientes datos:",
 	"gracias": "Gracias por contactarnos.",
 	"opciones": "Escriba 1 para sí o 2 para no.",
@@ -35,7 +35,7 @@
 	"adjuntar_form": "Por favor, adjunte el formulario de solicitud completado en formato PDF.",
 	"adjuntar_continuidad": "Por favor, adjunte las certificaciones de continuidad laboral emitidas por otras instituciones, si las tiene.",
 	"menu": "Menú de opciones",
-	"selected": "Selecciono: ",
+	"selected": "Seleccionaste: ",
 	"subir_pdf": "Una vez completado y firmado, por favor suba el formulario en formato PDF. Utilice la opción 2 para adjuntar los documentos.",
 	"exit": "Salir",
 	"prima_opcion_1": "1. Solicitud por primera vez.",
@@ -46,5 +46,6 @@
 	"try_again": "Intente nuevamente.",
 	"exit_opt": "Para cancelar, escriba salir o cancelar",
 	"correcta_atencion": "Para brindarle una atención adecuada, por favor proporcione los datos solicitados.",
-	"user_registered": "¿En qué puedo ayudarte"
+	"user_registered": "¿En qué puedo ayudarte",
+	"bienvenido": "bienvenido"
 }
