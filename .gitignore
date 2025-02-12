@@ -11,3 +11,5 @@ pnpm-lock.yaml
 
 src/utils/logs/*
 .vscode/tasks.json
+jsconfig.json
+pnpm-lock.yaml
