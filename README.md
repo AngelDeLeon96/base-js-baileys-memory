@@ -24,7 +24,9 @@ Bot desarrollado utilizando el framework builderbot y conectado a un CRM opensou
 
 
 ```
-npm i
+#Clone
+#Install with npm i or pnpm i
+#Use change envexample to .env and change the variables
 ```
 
 
